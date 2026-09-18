@@ -2,6 +2,16 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
+test('chart shows only fly equity and ignores baseline when scaling',()=>{
+ const page=fs.readFileSync(require('node:path').join(__dirname,'../dashboard.html'),'utf8');
+ const source=page.slice(page.indexOf('function draw('),page.indexOf('function render('));
+ const chart={innerHTML:''},ctx=vm.createContext({$:()=>chart});vm.runInContext(source,ctx);
+ ctx.draw([{equity:100,baseline:100},{equity:103,baseline:10000}]);
+ assert.equal((chart.innerHTML.match(/<polyline/g)||[]).length,1);
+ const first=chart.innerHTML;
+ ctx.draw([{equity:100,baseline:100},{equity:103,baseline:1}]);assert.equal(chart.innerHTML,first);
+ assert.ok(!page.includes('<span>Buy & hold</span>'));
+});
 const html=fs.readFileSync(require('node:path').join(__dirname,'../dashboard.html'),'utf8');
 function logic(){const code=html.match(/<script id="trade-logic">([\s\S]*?)<\/script>/);assert.ok(code,'trade announcement logic exists');const c={};vm.createContext(c);vm.runInContext(code[1],c);return c;}
 test('new fills are queued once, HOLD adds nothing, reset clears pending messages',()=>{
