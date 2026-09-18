@@ -22,7 +22,7 @@ while time.monotonic() < deadline:
         assert s['cash'] >= 0 and s['shares'] >= 0
         assert sum(s['activity']) == s['neural']['total_spikes']
         for t in s['trades']:
-            assert 1 <= t['requested_value'] <= 25
+            assert 1 <= t['requested_value'] <= 250
             assert t['signal_date'] < t['date']
             assert math.isclose(t['trade_value'], t['shares'] * t['price'], rel_tol=1e-9)
         records.append(s)

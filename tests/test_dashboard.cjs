@@ -12,6 +12,18 @@ test('chart shows only fly equity and ignores baseline when scaling',()=>{
  ctx.draw([{equity:100,baseline:100},{equity:103,baseline:1}]);assert.equal(chart.innerHTML,first);
  assert.ok(!page.includes('<span>Buy & hold</span>'));
 });
+test('dashboard P&L uses $10,000 capital and reset shows the new limits',()=>{
+ const page=fs.readFileSync(require('node:path').join(__dirname,'../dashboard.html'),'utf8');
+ const els={};const get=id=>els[id]??=( {style:{},children:[],textContent:''} );
+ const ctx=vm.createContext({$:get,draw:()=>{},updateAnnouncements:()=>{},money:v=>'$'+Number(v).toFixed(2),num:String});
+ vm.runInContext(page.slice(page.indexOf('function render('),page.indexOf('async function refresh(')),ctx);
+ ctx.render({status:'ready',starting_cash:10000});
+ assert.equal(get('equity').textContent,'$10000.00');
+ assert.ok(get('order-size').textContent.includes('$250'));
+ ctx.render({status:'ready',starting_cash:10000,equity:9999,baseline:10000,price:50,date:'test',neural:{memory:{changed_edges:0}},activity:[],range:['test'],shares:0,cash:9999,trades:[],costs:0,source:'test',fetched_at:'test'});
+ assert.equal(get('pnl').textContent,'$-1.00 since start');
+ assert.equal(get('pnl').className,'sub negative');
+});
 const html=fs.readFileSync(require('node:path').join(__dirname,'../dashboard.html'),'utf8');
 function logic(){const code=html.match(/<script id="trade-logic">([\s\S]*?)<\/script>/);assert.ok(code,'trade announcement logic exists');const c={};vm.createContext(c);vm.runInContext(code[1],c);return c;}
 test('new fills are queued once, HOLD adds nothing, reset clears pending messages',()=>{

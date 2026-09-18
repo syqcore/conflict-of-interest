@@ -5,8 +5,8 @@
 A rough, paper-only Rollins (ROL / Orkin) trading dashboard powered by the full MaleCNS v1.0 fly-connectome simulation. Based on [Alex Wormuth's Stonkfly](https://github.com/nftechie/stonkfly), with its MIT license and attribution retained.
 
 - 166,700 simulated neurons and 25,582,938 retained connections.
-- Real historical ROL prices, $100 fake money, next-open fills.
-- Neural-output strength sets $1–$25 order targets, limited by cash and shares.
+- Real historical ROL prices, $10,000 fake money, next-open fills.
+- Neural-output strength sets $1–$250 order targets, limited by cash and shares.
 - Percentage portfolio gains trigger proportional dopamine pulses, up to 200 ms.
 - Dashboard: portfolio versus buy-and-hold, neural activity, food pulses, trade values, pause/reset.
 

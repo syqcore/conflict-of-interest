@@ -5,6 +5,8 @@ import json
 
 D = Decimal
 ROOT = Path(__file__).resolve().parent
+STARTING_CASH = D('10000')
+MAX_ORDER_VALUE = D('250')
 
 
 def order_size(neural):
@@ -16,7 +18,7 @@ def order_size(neural):
     if side == 'HOLD':
         return D('0')
     strength = min(D('1'), max(D('0'), (abs(difference) - D('2')) / D('18')))
-    return (D('1') + D('24') * strength).quantize(D('.01'))
+    return (D('1') + (MAX_ORDER_VALUE - D('1')) * strength).quantize(D('.01'))
 
 
 def reward_pulse_ms(change, previous_equity):
@@ -37,7 +39,7 @@ def reward_for(change):
 
 class PaperAccount:
     def __init__(self):
-        self.cash = D('100')
+        self.cash = STARTING_CASH
         self.shares = D('0')
         self.costs = D('0')
 
@@ -49,8 +51,8 @@ class PaperAccount:
         if not price.is_finite() or price <= 0:
             raise ValueError('Positive finite price required')
         requested_value = D(str(requested_value))
-        if not requested_value.is_finite() or not 0 <= requested_value <= 25:
-            raise ValueError('Order value must be finite and between $0 and $25')
+        if not requested_value.is_finite() or not 0 <= requested_value <= MAX_ORDER_VALUE:
+            raise ValueError('Order value must be finite and between $0 and $250')
         if requested_value == 0:
             return None
         before_cash = self.cash
@@ -108,13 +110,13 @@ class Replay:
         self.index = 30
         self.pending = 'HOLD'
         self.pending_size = D('0')
-        self.previous_equity = D('100')
+        self.previous_equity = STARTING_CASH
         self.food = 0
         self.food_ms = 0.0
         self.history = []
         self.trades = []
         self.last = {}
-        self.baseline_shares = D('100') / (D(str(self.data['bars'][30]['open'])) * D('1.0005') * D('1.0005'))
+        self.baseline_shares = STARTING_CASH / (D(str(self.data['bars'][30]['open'])) * D('1.0005') * D('1.0005'))
 
     @property
     def done(self):
@@ -160,7 +162,7 @@ class Replay:
         return self.last
 
     def snapshot(self):
-        return {**self.last, 'history': self.history.copy(), 'trades': self.trades[-100:],
+        return {**self.last, 'starting_cash': float(STARTING_CASH), 'max_order_value': float(MAX_ORDER_VALUE), 'history': self.history.copy(), 'trades': self.trades[-100:],
                 'trade_count': len(self.trades), 'done': self.done,
                 'source': self.data['source'], 'fetched_at': self.data['fetched_at'],
                 'range': [self.data['bars'][30]['date'], self.data['bars'][-1]['date']]}
